@@ -6,4 +6,4 @@ repos:
       entry: pylint
       language: system
       types: [python]
-      requres_serial: true
+      require_serial: true
