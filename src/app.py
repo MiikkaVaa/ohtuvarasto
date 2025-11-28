@@ -76,15 +76,27 @@ def _validoi_muokkaa_lomake(tilavuus_str):
 
 
 def _kasittele_muokkaa_post(nimi, varasto):
-    """Handle POST for editing varasto. Returns (template, kwargs) or None."""
+    """Handle POST for editing varasto. Returns redirect URL or error tuple."""
     error, tilavuus = _validoi_muokkaa_lomake(request.form.get("tilavuus", "0"))
     if error:
-        kwargs = {"nimi": nimi, "varasto": varasto, "error": error}
-        return ("muokkaa.html", kwargs)
+        return (nimi, varasto, error)
 
     uusi_saldo = min(varasto.saldo, tilavuus)
     varastot[nimi] = Varasto(tilavuus, uusi_saldo)
     return None
+
+
+def _muokkaa_varasto_handler(nimi):
+    """Handle muokkaa_varasto logic. Returns Response."""
+    varasto = varastot[nimi]
+    if request.method != "POST":
+        return render_template("muokkaa.html", nimi=nimi, varasto=varasto)
+
+    result = _kasittele_muokkaa_post(nimi, varasto)
+    if result:
+        return render_template("muokkaa.html", nimi=result[0],
+                               varasto=result[1], error=result[2])
+    return redirect(url_for("nayta_varasto", nimi=nimi))
 
 
 @app.route("/varasto/<nimi>/muokkaa", methods=["GET", "POST"])
@@ -92,14 +104,7 @@ def muokkaa_varasto(nimi):
     """Edit a varasto's capacity."""
     if nimi not in varastot:
         return redirect(url_for("index"))
-
-    varasto = varastot[nimi]
-    if request.method != "POST":
-        return render_template("muokkaa.html", nimi=nimi, varasto=varasto)
-
-    result = _kasittele_muokkaa_post(nimi, varasto)
-    return render_template(result[0], **result[1]) if result else \
-        redirect(url_for("nayta_varasto", nimi=nimi))
+    return _muokkaa_varasto_handler(nimi)
 
 
 @app.route("/varasto/<nimi>/lisaa", methods=["POST"])
@@ -143,4 +148,4 @@ def poista_varasto(nimi):
 
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run()
