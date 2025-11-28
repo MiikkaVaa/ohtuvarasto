@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+{% block title %}{{ nimi }}{% endblock %}
+
+{% block content %}
+<h1>Varasto: {{ nimi }}</h1>
+
+<div class="card">
+    <h2>Tiedot</h2>
+    <p><strong>Saldo:</strong> {{ "%.2f"|format(varasto.saldo) }}</p>
+    <p><strong>Tilavuus:</strong> {{ "%.2f"|format(varasto.tilavuus) }}</p>
+    <p><strong>Vapaa tila:</strong> {{ "%.2f"|format(varasto.paljonko_mahtuu()) }}</p>
+
+    <div class="progress-bar">
+        {% set fill_percent = (varasto.saldo / varasto.tilavuus * 100) if varasto.tilavuus > 0 else 0 %}
+        <div class="progress-bar-fill" style="width: {{ fill_percent }}%;"></div>
+    </div>
+    <p class="info">{{ "%.1f"|format(fill_percent) }}% täynnä</p>
+
+    <a href="{{ url_for('muokkaa_varasto', nimi=nimi) }}" class="btn btn-secondary">Muokkaa tilavuutta</a>
+</div>
+
+<div class="card">
+    <h2>Lisää varastoon</h2>
+    <form action="{{ url_for('lisaa_varastoon', nimi=nimi) }}" method="post" style="display: flex; gap: 10px; align-items: flex-end;">
+        <div class="form-group" style="flex: 1; margin-bottom: 0;">
+            <label for="lisaa_maara">Määrä:</label>
+            <input type="number" id="lisaa_maara" name="maara" step="0.01" min="0" value="1">
+        </div>
+        <button type="submit" class="btn btn-success">Lisää</button>
+    </form>
+</div>
+
+<div class="card">
+    <h2>Ota varastosta</h2>
+    <form action="{{ url_for('ota_varastosta', nimi=nimi) }}" method="post" style="display: flex; gap: 10px; align-items: flex-end;">
+        <div class="form-group" style="flex: 1; margin-bottom: 0;">
+            <label for="ota_maara">Määrä:</label>
+            <input type="number" id="ota_maara" name="maara" step="0.01" min="0" value="1">
+        </div>
+        <button type="submit" class="btn btn-primary">Ota</button>
+    </form>
+</div>
+
+<div class="card">
+    <h2>Poista varasto</h2>
+    <p class="info">Tämä toiminto poistaa varaston pysyvästi.</p>
+    <form action="{{ url_for('poista_varasto', nimi=nimi) }}" method="post">
+        <button type="submit" class="btn btn-danger" onclick="return confirm('Haluatko varmasti poistaa varaston?')">Poista varasto</button>
+    </form>
+</div>
+{% endblock %}

@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block title %}Muokkaa: {{ nimi }}{% endblock %}
+
+{% block content %}
+<h1>Muokkaa varastoa: {{ nimi }}</h1>
+
+<div class="card">
+    {% if error %}
+    <p class="error">{{ error }}</p>
+    {% endif %}
+
+    <p class="info">Nykyinen tilavuus: {{ "%.2f"|format(varasto.tilavuus) }}, saldo: {{ "%.2f"|format(varasto.saldo) }}</p>
+
+    <form method="post">
+        <div class="form-group">
+            <label for="tilavuus">Uusi tilavuus:</label>
+            <input type="number" id="tilavuus" name="tilavuus" step="0.01" min="0.01" value="{{ varasto.tilavuus }}" required>
+        </div>
+        <p class="info">Huom: Jos uusi tilavuus on pienempi kuin nykyinen saldo, saldo asetetaan tilavuuden mukaiseksi.</p>
+
+        <button type="submit" class="btn btn-success">Tallenna</button>
+        <a href="{{ url_for('nayta_varasto', nimi=nimi) }}" class="btn btn-secondary">Peruuta</a>
+    </form>
+</div>
+{% endblock %}
