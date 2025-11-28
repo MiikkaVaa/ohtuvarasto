@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{% block title %}Varastot{% endblock %}
+
+{% block content %}
+<h1>Varastot</h1>
+
+<a href="{{ url_for('luo_varasto') }}" class="btn btn-primary">+ Luo uusi varasto</a>
+{% if varastot|length >= 2 %}
+<a href="{{ url_for('yhdista_varastot') }}" class="btn btn-secondary">Yhdistä varastoja</a>
+{% endif %}
+
+<div class="card" style="margin-top: 20px;">
+    {% if varastot %}
+    <table>
+        <thead>
+            <tr>
+                <th>Nimi</th>
+                <th>Saldo</th>
+                <th>Tilavuus</th>
+                <th>Vapaa tila</th>
+                <th>Toiminnot</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for nimi, varasto in varastot.items() %}
+            <tr>
+                <td><a href="{{ url_for('nayta_varasto', nimi=nimi) }}">{{ nimi }}</a></td>
+                <td>{{ "%.2f"|format(varasto.saldo) }}</td>
+                <td>{{ "%.2f"|format(varasto.tilavuus) }}</td>
+                <td>{{ "%.2f"|format(varasto.paljonko_mahtuu()) }}</td>
+                <td>
+                    <a href="{{ url_for('nayta_varasto', nimi=nimi) }}" class="btn btn-primary">Näytä</a>
+                    <form action="{{ url_for('poista_varasto', nimi=nimi) }}" method="post" style="display: inline;">
+                        <button type="submit" class="btn btn-danger" onclick="return confirm('Haluatko varmasti poistaa varaston?')">Poista</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p class="info">Ei varastoja. Luo uusi varasto aloittaaksesi.</p>
+    {% endif %}
+</div>
+{% endblock %}
