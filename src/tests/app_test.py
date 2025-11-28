@@ -161,3 +161,60 @@ class TestFlaskApp(unittest.TestCase):
         response = self.client.post("/varasto/Olematon/ota",
                                     data={"maara": "10"}, follow_redirects=True)
         self.assertEqual(response.status_code, 200)
+
+    def test_yhdista_get_nayttaa_lomakkeen(self):
+        self.client.post("/luo", data={"nimi": "A", "tilavuus": "100", "alku_saldo": "30"})
+        self.client.post("/luo", data={"nimi": "B", "tilavuus": "50", "alku_saldo": "20"})
+        response = self.client.get("/yhdista")
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("Yhdistä varastoja".encode("utf-8"), response.data)
+
+    def test_yhdista_yhdistaa_varastot(self):
+        self.client.post("/luo", data={"nimi": "A", "tilavuus": "100", "alku_saldo": "30"})
+        self.client.post("/luo", data={"nimi": "B", "tilavuus": "50", "alku_saldo": "20"})
+        response = self.client.post("/yhdista", data={
+            "varasto1": "A",
+            "varasto2": "B",
+            "uusi_nimi": "Yhdistetty"
+        }, follow_redirects=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertNotIn("A", varastot)
+        self.assertNotIn("B", varastot)
+        self.assertIn("Yhdistetty", varastot)
+        self.assertAlmostEqual(varastot["Yhdistetty"].tilavuus, 150)
+        self.assertAlmostEqual(varastot["Yhdistetty"].saldo, 50)
+
+    def test_yhdista_ilman_nimea_nayttaa_virheen(self):
+        self.client.post("/luo", data={"nimi": "A", "tilavuus": "100", "alku_saldo": "30"})
+        self.client.post("/luo", data={"nimi": "B", "tilavuus": "50", "alku_saldo": "20"})
+        response = self.client.post("/yhdista", data={
+            "varasto1": "A",
+            "varasto2": "B",
+            "uusi_nimi": ""
+        })
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("Anna yhdistetyn varaston nimi".encode("utf-8"), response.data)
+
+    def test_yhdista_samat_varastot_nayttaa_virheen(self):
+        self.client.post("/luo", data={"nimi": "A", "tilavuus": "100", "alku_saldo": "30"})
+        self.client.post("/luo", data={"nimi": "B", "tilavuus": "50", "alku_saldo": "20"})
+        response = self.client.post("/yhdista", data={
+            "varasto1": "A",
+            "varasto2": "A",
+            "uusi_nimi": "Yhdistetty"
+        })
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("kaksi eri varastoa".encode("utf-8"), response.data)
+
+    def test_yhdista_voi_kayttaa_vanhan_varaston_nimea(self):
+        self.client.post("/luo", data={"nimi": "A", "tilavuus": "100", "alku_saldo": "30"})
+        self.client.post("/luo", data={"nimi": "B", "tilavuus": "50", "alku_saldo": "20"})
+        response = self.client.post("/yhdista", data={
+            "varasto1": "A",
+            "varasto2": "B",
+            "uusi_nimi": "A"
+        }, follow_redirects=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("A", varastot)
+        self.assertNotIn("B", varastot)
+        self.assertAlmostEqual(varastot["A"].tilavuus, 150)

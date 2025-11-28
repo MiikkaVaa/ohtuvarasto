@@ -147,5 +147,69 @@ def poista_varasto(nimi):
     return redirect(url_for("index"))
 
 
+def _tarkista_varastot(varasto1, varasto2):
+    """Check if varastos are valid for merge. Returns error or None."""
+    error = None
+    if not varasto1 or not varasto2:
+        error = "Valitse kaksi varastoa"
+    elif varasto1 == varasto2:
+        error = "Valitse kaksi eri varastoa"
+    elif varasto1 not in varastot or varasto2 not in varastot:
+        error = "Valittua varastoa ei löydy"
+    return error
+
+
+def _validoi_yhdista_lomake(varasto1, varasto2, uusi_nimi):
+    """Validate merge form. Returns error message or None."""
+    error = _tarkista_varastot(varasto1, varasto2)
+    if not error and not uusi_nimi:
+        error = "Anna yhdistetyn varaston nimi"
+    elif not error and uusi_nimi in varastot:
+        if uusi_nimi not in (varasto1, varasto2):
+            error = "Varasto tällä nimellä on jo olemassa"
+    return error
+
+def _suorita_yhdistaminen(varasto1, varasto2, uusi_nimi):
+    """Execute the merge of two varastos."""
+    v1 = varastot[varasto1]
+    v2 = varastot[varasto2]
+    yhdistetty_tilavuus = v1.tilavuus + v2.tilavuus
+    yhdistetty_saldo = v1.saldo + v2.saldo
+
+    del varastot[varasto1]
+    del varastot[varasto2]
+
+    varastot[uusi_nimi] = Varasto(yhdistetty_tilavuus, yhdistetty_saldo)
+
+
+def _kasittele_yhdista_post():
+    """Handle POST for merging. Returns (template, kwargs) or None."""
+    varasto1 = request.form.get("varasto1", "")
+    varasto2 = request.form.get("varasto2", "")
+    uusi_nimi = request.form.get("uusi_nimi", "").strip()
+
+    error = _validoi_yhdista_lomake(varasto1, varasto2, uusi_nimi)
+    if error:
+        kwargs = {"varastot": varastot, "error": error,
+                  "varasto1": varasto1, "varasto2": varasto2,
+                  "uusi_nimi": uusi_nimi}
+        return ("yhdista.html", kwargs)
+
+    _suorita_yhdistaminen(varasto1, varasto2, uusi_nimi)
+    return (None, {"nimi": uusi_nimi})
+
+
+@app.route("/yhdista", methods=["GET", "POST"])
+def yhdista_varastot():
+    """Merge two varastos into one."""
+    if request.method != "POST":
+        return render_template("yhdista.html", varastot=varastot)
+
+    template, kwargs = _kasittele_yhdista_post()
+    if template:
+        return render_template(template, **kwargs)
+    return redirect(url_for("nayta_varasto", nimi=kwargs["nimi"]))
+
+
 if __name__ == "__main__":
     app.run()

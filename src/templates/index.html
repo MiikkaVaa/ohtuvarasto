@@ -6,6 +6,9 @@
 <h1>Varastot</h1>
 
 <a href="{{ url_for('luo_varasto') }}" class="btn btn-primary">+ Luo uusi varasto</a>
+{% if varastot|length >= 2 %}
+<a href="{{ url_for('yhdista_varastot') }}" class="btn btn-secondary">Yhdistä varastoja</a>
+{% endif %}
 
 <div class="card" style="margin-top: 20px;">
     {% if varastot %}

@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block title %}Yhdistä varastoja{% endblock %}
+
+{% block content %}
+<h1>Yhdistä varastoja</h1>
+
+<div class="card">
+    {% if error %}
+    <p class="error">{{ error }}</p>
+    {% endif %}
+
+    {% if varastot|length < 2 %}
+    <p class="info">Tarvitset vähintään kaksi varastoa yhdistääksesi ne.</p>
+    <a href="{{ url_for('luo_varasto') }}" class="btn btn-primary">Luo varasto</a>
+    {% else %}
+    <form method="post">
+        <div class="form-group">
+            <label for="varasto1">Ensimmäinen varasto:</label>
+            <select id="varasto1" name="varasto1" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                <option value="">-- Valitse varasto --</option>
+                {% for nimi, varasto in varastot.items() %}
+                <option value="{{ nimi }}" {% if varasto1 == nimi %}selected{% endif %}>
+                    {{ nimi }} (saldo: {{ "%.2f"|format(varasto.saldo) }}, tilavuus: {{ "%.2f"|format(varasto.tilavuus) }})
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="varasto2">Toinen varasto:</label>
+            <select id="varasto2" name="varasto2" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                <option value="">-- Valitse varasto --</option>
+                {% for nimi, varasto in varastot.items() %}
+                <option value="{{ nimi }}" {% if varasto2 == nimi %}selected{% endif %}>
+                    {{ nimi }} (saldo: {{ "%.2f"|format(varasto.saldo) }}, tilavuus: {{ "%.2f"|format(varasto.tilavuus) }})
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="uusi_nimi">Yhdistetyn varaston nimi:</label>
+            <input type="text" id="uusi_nimi" name="uusi_nimi" value="{{ uusi_nimi or '' }}">
+        </div>
+
+        <p class="info">Yhdistettäessä molempien varastojen tilavuudet ja saldot lasketaan yhteen.</p>
+
+        <button type="submit" class="btn btn-success">Yhdistä varastot</button>
+        <a href="{{ url_for('index') }}" class="btn btn-secondary">Peruuta</a>
+    </form>
+    {% endif %}
+</div>
+{% endblock %}
